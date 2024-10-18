@@ -7,6 +7,7 @@ package main
 import (
 	"RestaurantAssistant/Database"
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -24,6 +25,14 @@ type SpecialTime struct {
 }
 type SpecialName struct {
 	Name string `form:"name"`
+}
+type BillAmount struct {
+	Name   string  `form:"name"`
+	Amount float64 `json:"amount"`
+}
+type Totals struct {
+	BillAmounts []BillAmount
+	Total       float64 `json:"total"`
 }
 
 func main() {
@@ -80,6 +89,18 @@ func main() {
 		}
 		context.JSON(http.StatusOK, gin.H{"status": status})
 	})
+	router.GET("/BillAmount", func(context *gin.Context) {
+		var targetTime SpecialTime
+		if err := context.BindQuery(&targetTime); err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+		status, err := billAmount(db)
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		}
+		context.JSON(http.StatusOK, gin.H{"status": status})
+	})
 	router.Run(":8000")
 }
 
@@ -132,4 +153,34 @@ func getTodaySpecials(db *sql.DB) ([]SpecialDish, error) {
 		specials = append(specials, special)
 	}
 	return specials, nil
+}
+
+// 账单金额结算
+func billAmount(db *sql.DB) (Totals, error) {
+	var billAmounts []BillAmount
+	var total = 0.0
+	rows, err := db.Query("select name, quantily, price from Special_dishes where date = ?", time.Now().Format("2006-01-02"))
+	if err != nil {
+		log.Fatal(err)
+		return Totals{}, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var special SpecialDish
+		if err := rows.Scan(&special.Name, &special.Number, &special.Price); err != nil {
+			log.Fatal(err)
+			return Totals{}, err
+		}
+		var billAmount BillAmount
+		fmt.Printf("菜名: %s\t\t价格: %f\n", special.Name, special.Price*float64(special.Number))
+		billAmount.Name = special.Name
+		billAmount.Amount = special.Price * float64(special.Number)
+		billAmounts = append(billAmounts, billAmount)
+		total += billAmount.Amount
+	}
+
+	var totals Totals
+	totals.BillAmounts = billAmounts
+	totals.Total = total
+	return totals, nil
 }
