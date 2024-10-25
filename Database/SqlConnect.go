@@ -1,17 +1,24 @@
 package Database
 
 import (
+	"RestaurantAssistant/utils"
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var Db *sql.DB
+var err error
+
 func ConnectDB() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root:minshenyao@tcp(127.0.0.1:3306)/Canteen")
+	config := utils.AppConfig.Database
+	sqlConnect := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", config.User, config.Password, config.Host, config.Port, config.Dbname)
+	Db, err = sql.Open("mysql", sqlConnect)
 	if err != nil {
 		return nil, err
 	}
-	if err = db.Ping(); err != nil {
+	if err = Db.Ping(); err != nil {
 		return nil, err
 	}
-	return db, nil
+	return Db, nil
 }
