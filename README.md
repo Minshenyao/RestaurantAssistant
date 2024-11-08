@@ -21,6 +21,8 @@ Go语言编译器版本、使用框架及其数据库版本`go1.23.1 + gin v1.10
 创建用户信息表: `CREATE TABLE User (phone VARCHAR(11) NOT NULL PRIMARY KEY, vip TINYINT(1) NOT NULL DEFAULT 0, deposit DECIMAL(10, 2) NOT NULL DEFAULT 0);`
 
 ### 备注
-`2023-10-25` 稍微整合了一下代码，使其更有结构，而不是单一的一个go文件
+`2024-10-25` 稍微整合了一下代码，使其更有结构，而不是单一的一个go文件
+
+`2024-11-08` 烂尾了，按照Java书上案例来重构，发现书上的案例没有逻辑，很杂乱，后续可能会创建一个新库，开创一个新的项目，会包含实际开发中拥有的基础功能，依旧很基础
 
 
